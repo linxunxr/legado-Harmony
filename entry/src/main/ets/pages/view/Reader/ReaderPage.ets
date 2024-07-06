@@ -14,7 +14,8 @@ import { BookList } from 'ets/componets/dataList/bookList';
 
 interface ParamsObj {
   bookData: BookList,
-  clickBookChapter: number
+  clickBookChapter: number,
+  txtFile:chaptersItem[]
 }
 
 @Entry
@@ -32,7 +33,7 @@ struct ReaderPage {
   @State TotalChapters: number = 0
   @State CurrentLuminance: number = 0 // 亮度
   @State CurrentFontSize: number = 20 // 字号
-  @State LineHeight: string = "180%"
+  @State LineHeight: number = 1.8
   @State ParagraphSpacing: number = -2
   @State isShowSource: boolean = false
   @State isShowPurification: boolean = false
@@ -52,11 +53,11 @@ struct ReaderPage {
     offset: { dx: 0, dy: -300 }
   })
 
-  async onPageShow() {
+  async aboutToAppear() {
     //详情页加了个目录序号参数，所以修改了一下params的类型，不影响之前的bookData，但需要多‘.’一次。看看大佬们可以怎么优化一下，上个页面BookDetailPage
     let temp = router.getParams() as ParamsObj
     console.log('router ReaderPage:' + temp.bookData.fileLink)
-    this.txtFile = await FileHandler.readFile(temp.bookData.fileLink) //txt小说
+    this.txtFile = temp.txtFile //txt小说
     this.TotalChapters = this.txtFile.length
     this.CurrentChapters = temp.clickBookChapter
   }
@@ -73,7 +74,9 @@ struct ReaderPage {
                 .onClick(() => {
                   router.back()
                 })
-              Text(`${this.txtFile[this.CurrentChapters.toFixed(0)]?.chapterTitleNumber} ${this.txtFile[this.CurrentChapters.toFixed(0)]?.title}`.replace(new RegExp('\\s{1,}','g'),' ').replaceAll('=',''))
+              Text(`${this.txtFile[this.CurrentChapters]?.chapterTitleNumber} ${this.txtFile[this.CurrentChapters]?.title}`
+                .replace(new RegExp('\\s{1,}','g'), ' ')
+                .replaceAll('=', ''))
                 .layoutWeight(1)
                 .maxLines(1)
                 .textOverflow({ overflow: TextOverflow.Ellipsis })
@@ -222,7 +225,7 @@ struct ReaderPage {
                   .blockSize({ width: 30, height: 30 })
                   .layoutWeight(1)
                   .onChange((value) => {
-                    this.CurrentChapters = value
+                    this.CurrentChapters = Number(value.toFixed(0))
                   })
 
                 Text("下一章").onClick(() => {
@@ -283,17 +286,17 @@ struct ReaderPage {
                   Text('排版')
                   Button('紧凑')
                     .onClick(() => {
-                      this.LineHeight = "160%"
+                      this.LineHeight = 1.6
                       this.ParagraphSpacing = -4
                     })
                   Button('适中')
                     .onClick(() => {
-                      this.LineHeight = "180%"
+                      this.LineHeight = 1.8
                       this.ParagraphSpacing = -2
                     })
                   Button('宽松')
                     .onClick(() => {
-                      this.LineHeight = "200%"
+                      this.LineHeight = 2
                       this.ParagraphSpacing = 0
                     })
                   Row() {
@@ -398,39 +401,39 @@ struct ReaderPage {
         .width("100%")
         .height(40)
 
-        Scroll() {
-          Column() {
-            Row() {
-              Text(`${this.txtFile[this.CurrentChapters.toFixed(0)]?.chapterTitleNumber} ${this.txtFile[this.CurrentChapters.toFixed(0)]?.title}`.replace(new RegExp('\\s{1,}','g'),' ').replaceAll('=',''))
-                .lineHeight(20)
-                .font({
-                  size: 15,
-                  weight: 700
-                })
-                .fontColor("rgba(0, 0, 0, 0.88)")
-            }
-            .padding({
-              top: 16,
-              bottom: 16,
-              left: 24,
-              right: 24
-            })
-            .width("100%")
+        Column() {
+          // Row() {
+          //   Text(`${this.txtFile[this.CurrentChapters.toFixed(0)]?.chapterTitleNumber} ${this.txtFile[this.CurrentChapters.toFixed(0)]?.title}`.replace(new RegExp('\\s{1,}',
+          //     'g'), ' ').replaceAll('=', ''))
+          //     .lineHeight(20)
+          //     .font({
+          //       size: 15,
+          //       weight: 700
+          //     })
+          //     .fontColor("rgba(0, 0, 0, 0.88)")
+          // }
+          // .padding({
+          //   top: 16,
+          //   bottom: 16,
+          //   left: 24,
+          //   right: 24
+          // })
+          // .width("100%")
 
-            // txt小说内容显示处理
-            TxtContentHandler({
-              txtFile: this.txtFile,
-              CurrentChapters: this.CurrentChapters,
-              LineHeight: this.LineHeight,
-              CurrentFontSize: this.CurrentFontSize,
-              ParagraphSpacing: this.ParagraphSpacing
-            })
-          }
-          .padding({
-            left: this.ReaderPadding,
-            right: this.ReaderPadding
+          // txt小说内容显示处理
+          TxtContentHandler({
+            txtFile: this.txtFile,
+            CurrentChapters: this.CurrentChapters,
+            LineHeight: this.LineHeight,
+            CurrentFontSize: this.CurrentFontSize,
+            ParagraphSpacing: this.ParagraphSpacing,
+            // ReaderPadding:this.ReaderPadding
           })
         }
+        .padding({
+          left: this.ReaderPadding,
+          right: this.ReaderPadding
+        })
         .layoutWeight(1)
 
         Blank(1)
